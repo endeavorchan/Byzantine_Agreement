@@ -1,22 +1,22 @@
 #include "general.h"
 
+
 int main(){
-	MSGList Msglist;
-	Msglist["0"] = 1;
-	Msglist["10"] = 1;
-	Msglist["320"] = 0;
-	
-	
-	
-	Msglist["230"] = 1;
-	Msglist["30"] = 1;
-	Msglist["20"] = 0;
-	MSGList::iterator pos;
-	for(pos = Msglist.begin(); pos != Msglist.end(); ++pos){
-		cout << "key: " << pos->first << " Value: " << pos->second; 
-		cout << endl;
+
+	Servers servers;
+	string file_name = "ip.conf";
+	ifstream infile(file_name.c_str(),ios::in);
+ 
+	string textline;
+ 
+	while(getline(infile,textline,'\n')){    //遇到换行结束这一行的读取
+		servers.push_back(textline);
+	}  
+	infile.close();
+	Servers::iterator pos;
+	for(pos = servers.begin(); pos != servers.end(); ++pos){
+		cout << *pos << endl;
 	}
 
-	
 	return 0;
 }
