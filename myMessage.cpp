@@ -57,7 +57,7 @@ void sendByzantineMessage (){
 
 	freeaddrinfo(servinfo);
 
-	printf("talker: sent %d bytes to %s\n", numbytes, "172.16.238.161");
+	printf("talker: sent %d bytes to %s\n", numbytes, "172.16.238.160");
 	close(sockfd);
 
 //	return 0;
