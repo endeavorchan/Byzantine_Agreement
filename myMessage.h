@@ -54,19 +54,19 @@ public:
 	Messages();
 	Ack* makeAck(int round){
 		ack = (Ack*)malloc(sizeof(Ack));
-		ack->type = ACK;
-		ack->size = sizeof(Ack);
-		ack->round = round;
+		ack->type = htonl(ACK);
+		ack->size = htonl(sizeof(Ack));
+		ack->round = htonl(round);
 	}
 	ByzantineMessage * makeByzantineMessage(int order, int round, int idcount){
 		byzmsg = (ByzantineMessage *)malloc(sizeof(ByzantineMessage) + sizeof(uint32_t) * idcount);
-		byzmsg->type = BYZANTINE;
-		byzmsg->size = sizeof(ByzantineMessage) + sizeof(uint32_t) * idcount;
-		byzmsg->round = round;
-		byzmsg->order = order;
+		byzmsg->type = htonl(BYZANTINE);
+		byzmsg->size = htonl(sizeof(ByzantineMessage) + sizeof(uint32_t) * idcount);
+		byzmsg->round = htonl(round);
+		byzmsg->order = htonl(order);
 		//	byzmsg->order = 2;
 		for(int i = 0; i < idcount; ++i){
-			byzmsg->ids[i] = 2;
+			byzmsg->ids[i] = htonl(2);
 		}
 		return byzmsg;
 	}
@@ -79,7 +79,7 @@ public:
 	void printByzantineMessageids(int idcount){
 		//	cout << byzmsg->order  << " this is order "<< endl;
 		for(int i = 0; i < idcount; ++i){
-			cout << byzmsg->ids[i]<< endl;
+			cout << ntohl(byzmsg->ids[i])<< endl;
 		}
 	}
 	void sendByzantineMessage(int type, void* p);

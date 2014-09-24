@@ -118,13 +118,27 @@ void Messages::recvByzantineMessage(){
 		exit(1);
 	}
 
+	/* Collect message */
+	uint32_t *ptype = (uint32_t*)buf;
+	if(ntohl(*ptype) == BYZANTINE){
+		ByzantineMessage* byzmsg = (ByzantineMessage*)buf;
+		int nids = (ntohl(byzmsg->size) - sizeof(ByzantineMessage)) / sizeof(uint32_t);
+		printByzantineMessageids(nids);
+		
+	}
+	else if(ntohl(*ptype) == ACK){
+	}
+	else{
+		cout << "received message error" << endl;
+	}
+
 	printf("listener: got packet from %s\n",
 		inet_ntop(their_addr.ss_family,
 			get_in_addr((struct sockaddr *)&their_addr),
 			s, sizeof s));
 	printf("listener: packet is %d bytes long\n", numbytes);
 	buf[numbytes] = '\0';
-	printf("listener: packet contains \"%s\"\n", buf);
+	//printf("listener: packet contains \"%s\"\n", buf);
 
 }
 
