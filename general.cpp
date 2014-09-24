@@ -12,6 +12,7 @@ void* recev(void *args){
 void* sendm(void *args){
 	while(1){
 		sendByzantineMessage();
+		sleep(2);
 	}
 }
 int main(){
@@ -55,6 +56,7 @@ int main(){
 	if(ret2 !=0 ){
 		cout << "pthread creat error" << endl;	
 	}	
-
+	sleep(20);
+	kill(tids[0]);
 	return 0;
 }
