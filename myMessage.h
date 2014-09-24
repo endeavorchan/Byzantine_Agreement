@@ -29,6 +29,8 @@ void printByzantineMessageids(ByzantineMessage * byzmsg, int idcount);
 void makeAck();
 
 
+
+
 /*
 class myMessage{
 	uint32_t type;
