@@ -43,15 +43,29 @@ class Messages{
 	uint32_t my_id;
 public:
 	Messages();
-	void makeByzantineMessage(int idcount){
+	Ack* makeAck(int round){
+		ack = (Ack*)malloc(sizeof(Ack));
+		ack->type = ACK;
+		ack->size = sizeof(Ack);
+		ack->round = round;
+	}
+	ByzantineMessage * makeByzantineMessage(int order, int round, int idcount){
 		byzmsg = (ByzantineMessage *)malloc(sizeof(ByzantineMessage) + sizeof(uint32_t) * idcount);
+		byzmsg->type = BYZANTINE;
+		byzmsg->size = sizeof(ByzantineMessage) + sizeof(uint32_t) * idcount;
+		byzmsg->round = round;
+		byzmsg->order = order;
 		//	byzmsg->order = 2;
 		for(int i = 0; i < idcount; ++i){
-			byzmsg->ids[i] = 22;
+			byzmsg->ids[i] = 2;
 		}
+		return byzmsg;
 	}
 	void deAllocatemessage(){
 		free(byzmsg);
+	}
+	void deAllocateack(){
+		free(ack);
 	}
 	void printByzantineMessageids(int idcount){
 		//	cout << byzmsg->order  << " this is order "<< endl;
