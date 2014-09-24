@@ -37,25 +37,28 @@ Messages::Messages(){
 
 	freeaddrinfo(servinfo);
 
-
+   	/* make message */
+	byzmsg = makeByzantineMessage(1, 0, 4);
+	//cout << "sec" <<endl;
 }
 
 void Messages::mainLoop(){
 	fd_set set;
   
-    while (1) {
+   // while (1) {
 	//cout << "Iterate" << endl;
-	struct timeval timeout={1,0}; 
+	struct timeval timeout={10,0}; 
 	FD_SET(sockfd, &set);
 
 	select(sockfd+1, &set, NULL, NULL, &timeout);
 
 	if (FD_ISSET(sockfd, &set)) {
-	    //cout << "receive message\n";
+	    cout << "receive message\n";
 	    recvByzantineMessage();
 	}
+	cout << "1 " << byzmsg << endl;
 	sendByzantineMessage(BYZANTINE, (void*)byzmsg);
-    }
+  //  }
 }
 
 
@@ -66,16 +69,20 @@ void Messages::sendByzantineMessage(int type, void* p){
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_DGRAM;
-	getaddrinfo("172.16.238.158", "6441", &hints, &servinfo);
+	getaddrinfo("172.16.238.160", "6441", &hints, &servinfo);
 	char buf[MAXBUFLEN];
-
+	
 	if(type == BYZANTINE){
 		ByzantineMessage* byzmsg = (ByzantineMessage*)p;
-		char *mp = (char*)p;
-		for(int i = 0; i < byzmsg->size; ++i){
+		char *mp = (char*) p;
+		//cout << "2 " << mp << endl;
+
+
+		for(int i = 0; i < ntohl(byzmsg->size); ++i){
 			buf[i] = mp[i];
 		}
-		if ((numbytes = sendto(sockfd, buf, byzmsg->size, 0, 
+		cout << "size :"<< ntohl(byzmsg->size ) << endl;
+		if ((numbytes = sendto(sockfd, buf, ntohl(byzmsg->size), 0, 
 					servinfo->ai_addr, servinfo->ai_addrlen)) == -1) {
 			perror("talker: sendto");
 			exit(1);
@@ -98,7 +105,7 @@ void Messages::sendByzantineMessage(int type, void* p){
 	}
 
 	freeaddrinfo(servinfo);
-	printf("talker: sent %d bytes to %s\n", numbytes, "172.16.238.158");
+	printf("talker: sent %d bytes to %s\n", numbytes, "172.16.238.160");
 	//close(sockfd);
 
 }
