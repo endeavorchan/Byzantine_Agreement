@@ -25,14 +25,18 @@ int main(){
 	uint16_t myport = 6440;
 	uint32_t server_ip;
 */
-
+/*
 	ByzantineMessage * bzmsg;
 	int count = 4;
 	makeByzantineMessage(bzmsg, count);
 	printByzantineMessageids(bzmsg, count);
 	sendByzantineMessage();
 	recvByzantineMessage();
+*/
 	
-
+	Messages msg;
+	msg.makeByzantineMessage(4);
+	msg.printByzantineMessageids(4);
+	msg.mainLoop();
 	return 0;
 }

@@ -24,14 +24,47 @@ typedef struct {
 	uint32_t round; // round number
 } Ack;
 
+/*
 void makeByzantineMessage (ByzantineMessage * &byzmsg, int idcount);
 void printByzantineMessageids(ByzantineMessage * byzmsg, int idcount);
 void sendByzantineMessage ();
 void *get_in_addr(struct sockaddr *sa);
 void recvByzantineMessage();
 void makeAck();
+*/
 
+class Messages{
 
+	ByzantineMessage* byzmsg;
+	Ack* ack;
+	int sockfd;
+	uint16_t my_port;
+	uint32_t my_ip;
+	uint32_t my_id;
+public:
+	Messages();
+	void makeByzantineMessage(int idcount){
+		byzmsg = (ByzantineMessage *)malloc(sizeof(ByzantineMessage) + sizeof(uint32_t) * idcount);
+		//	byzmsg->order = 2;
+		for(int i = 0; i < idcount; ++i){
+			byzmsg->ids[i] = 22;
+		}
+	}
+	void deAllocatemessage(){
+		free(byzmsg);
+	}
+	void printByzantineMessageids(int idcount){
+		//	cout << byzmsg->order  << " this is order "<< endl;
+		for(int i = 0; i < idcount; ++i){
+			cout << byzmsg->ids[i]<< endl;
+		}
+	}
+	void sendByzantineMessage();
+	void recvByzantineMessage();
+	void *get_in_addr(struct sockaddr *sa);
+	void mainLoop();
+
+};
 
 
 /*
