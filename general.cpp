@@ -1,15 +1,17 @@
 #include "general.h"
 
-
+int processname[4] = {0, 1, 2, 3};
 int main(){
 
+	int process = 0;
+
+
+/* Read ips from a external file 
 	Servers servers;
 	string file_name = "ip.conf";
 	ifstream infile(file_name.c_str(),ios::in);
- 
 	string textline;
- 
-	while(getline(infile,textline,'\n')){    //遇到换行结束这一行的读取
+	while(getline(infile,textline,'\n')){    
 		servers.push_back(textline);
 	}  
 	infile.close();
@@ -17,6 +19,15 @@ int main(){
 	for(pos = servers.begin(); pos != servers.end(); ++pos){
 		cout << *pos << endl;
 	}
+
+	uint16_t myport = 6440;
+	uint32_t server_ip;
+*/
+
+	ByzantineMessage * bzmsg;
+	int count = 4;
+	makeByzantineMessage(bzmsg, count);
+	printByzantineMessageids(bzmsg, count);
 
 	return 0;
 }
