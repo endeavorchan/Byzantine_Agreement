@@ -28,8 +28,10 @@ int main(){
 
 	ByzantineMessage * bzmsg;
 	int count = 4;
-	makeByzantineMessage();
-	printByzantineMessageids();
+	makeByzantineMessage(bzmsg, count);
+	printByzantineMessageids(bzmsg, count);
+	sendByzantineMessage();
+	recvByzantineMessage();
 	
 
 	return 0;
