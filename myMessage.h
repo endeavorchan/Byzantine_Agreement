@@ -1,6 +1,6 @@
 #ifndef MYMESSAGE_H
 #define MYMESSAGE_H
-#include <netdb.h>
+#include "msglist.h"
 #include <iostream>
 #define PORT 10088
 using namespace std;
