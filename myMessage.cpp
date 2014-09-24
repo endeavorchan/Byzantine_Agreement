@@ -28,7 +28,7 @@ void sendByzantineMessage (ByzantineMessage *msg, int idcount){
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_DGRAM;
 
-	if ((rv = getaddrinfo("172.16.238.161", MYPORT, &hints, &servinfo)) != 0) {
+	if ((rv = getaddrinfo("172.16.238.160", MYPORT, &hints, &servinfo)) != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
 		//return 1;
 	}
