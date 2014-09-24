@@ -26,7 +26,7 @@ typedef struct {
 
 void makeByzantineMessage (ByzantineMessage * &byzmsg, int idcount);
 void printByzantineMessageids(ByzantineMessage * byzmsg, int idcount);
-void sendByzantineMessage (ByzantineMessage *msg, int idcount);
+void sendByzantineMessage ();
 void *get_in_addr(struct sockaddr *sa);
 void recvByzantineMessage();
 void makeAck();

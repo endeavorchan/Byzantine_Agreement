@@ -17,7 +17,7 @@ void printByzantineMessageids(ByzantineMessage * byzmsg, int idcount){
 	}
 }
 
-void sendByzantineMessage (ByzantineMessage *msg, int idcount){
+void sendByzantineMessage (){
 
 	//struct  sockaddr_in saddr;
 	int sockfd;
