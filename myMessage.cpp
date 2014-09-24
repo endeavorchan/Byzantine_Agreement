@@ -54,12 +54,12 @@ void Messages::mainLoop(){
 	    //cout << "receive message\n";
 	    recvByzantineMessage();
 	}
-	sendByzantineMessage();
+	sendByzantineMessage(BYZANTINE, (void*)byzmsg);
     }
 }
 
 
-void Messages::sendByzantineMessage(){
+void Messages::sendByzantineMessage(int type, void* p){
 
 	struct addrinfo hints, *servinfo;
 	int numbytes;
@@ -67,28 +67,41 @@ void Messages::sendByzantineMessage(){
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_DGRAM;
 	getaddrinfo("172.16.238.158", "6441", &hints, &servinfo);
-	if ((numbytes = sendto(sockfd, "hello cc", strlen("hello cc"), 0,
-			servinfo->ai_addr, servinfo->ai_addrlen)) == -1) {
-		perror("talker: sendto");
-		exit(1);
+	char buf[MAXBUFLEN];
+
+	if(type == BYZANTINE){
+		ByzantineMessage* byzmsg = (ByzantineMessage*)p;
+		char *mp = (char*)p;
+		for(int i = 0; i < byzmsg->size; ++i){
+			buf[i] = mp[i];
+		}
+		if ((numbytes = sendto(sockfd, buf, byzmsg->size, 0, 
+					servinfo->ai_addr, servinfo->ai_addrlen)) == -1) {
+			perror("talker: sendto");
+			exit(1);
+		}
 	}
+	else if(type == ACK){
+		Ack* ack = (Ack*)p;
+		char *mp = (char*)p;
+		for(int i = 0; i < ack->size; ++i){
+			buf[i] = mp[i];
+		}
+		if ((numbytes = sendto(sockfd, buf, ack->size, 0, 
+					servinfo->ai_addr, servinfo->ai_addrlen)) == -1) {
+			perror("talker: sendto");
+			exit(1);
+		}
+	}
+	else{
+		cout << "message content error\n";
+	}
+
 	freeaddrinfo(servinfo);
 	printf("talker: sent %d bytes to %s\n", numbytes, "172.16.238.158");
 	//close(sockfd);
 
 }
-
-
-
-void *Messages::get_in_addr(struct sockaddr *sa)
-{
-	if (sa->sa_family == AF_INET) {
-		return &(((struct sockaddr_in*)sa)->sin_addr);
-	}
-
-	return &(((struct sockaddr_in6*)sa)->sin6_addr);
-}
-
 
 void Messages::recvByzantineMessage(){
 	struct sockaddr_storage their_addr;

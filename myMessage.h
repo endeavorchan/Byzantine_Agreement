@@ -34,13 +34,22 @@ void makeAck();
 */
 
 class Messages{
-
+private:
 	ByzantineMessage* byzmsg;
 	Ack* ack;
 	int sockfd;
 	uint16_t my_port;
 	uint32_t my_ip;
 	uint32_t my_id;
+	void *get_in_addr(struct sockaddr *sa)
+	{
+		if (sa->sa_family == AF_INET) {
+			return &(((struct sockaddr_in*)sa)->sin_addr);
+		}
+
+		return &(((struct sockaddr_in6*)sa)->sin6_addr);
+	}
+
 public:
 	Messages();
 	Ack* makeAck(int round){
@@ -73,9 +82,8 @@ public:
 			cout << byzmsg->ids[i]<< endl;
 		}
 	}
-	void sendByzantineMessage();
+	void sendByzantineMessage(int type, void* p);
 	void recvByzantineMessage();
-	void *get_in_addr(struct sockaddr *sa);
 	void mainLoop();
 
 };
