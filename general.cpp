@@ -28,6 +28,9 @@ int main(){
 	int count = 4;
 	makeByzantineMessage(bzmsg, count);
 	printByzantineMessageids(bzmsg, count);
+	
+	sendByzantineMessage(bzmsg, count);
+	recvByzantineMessage();
 
 	return 0;
 }
