@@ -83,7 +83,7 @@ public:
 		}
 	}
 	void sendByzantineMessage(int type, void* p);
-	void recvByzantineMessage();
+	int recvByzantineMessage(void* &);
 	void mainLoop();
 
 };
