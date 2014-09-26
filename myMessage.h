@@ -49,6 +49,15 @@ private:
 
 		return &(((struct sockaddr_in6*)sa)->sin6_addr);
 	}
+	
+	ByzantineMessage* allocatebyz(int idcount){
+		ByzantineMessage* p = (ByzantineMessage *)malloc(sizeof(ByzantineMessage) + sizeof(uint32_t) * idcount);
+		return p;
+	}
+	Ack* allocateAck(){
+		Ack* p = (Ack*)malloc(sizeof(Ack));
+		return p;
+	}
 
 public:
 	Messages();
@@ -59,7 +68,7 @@ public:
 		ack->round = htonl(round);
 	}
 	ByzantineMessage * makeByzantineMessage(int order, int round, int idcount){
-		byzmsg = (ByzantineMessage *)malloc(sizeof(ByzantineMessage) + sizeof(uint32_t) * idcount);
+		byzmsg = allocatebyz(idcount);
 		byzmsg->type = htonl(BYZANTINE);
 		byzmsg->size = htonl(sizeof(ByzantineMessage) + sizeof(uint32_t) * idcount);
 		byzmsg->round = htonl(round);
@@ -70,17 +79,21 @@ public:
 		}
 		return byzmsg;
 	}
-	void deAllocatemessage(){
-		free(byzmsg);
-	}
-	void deAllocateack(){
-		free(ack);
-	}
+	
+	
 	void printByzantineMessageids(int idcount){
 		//	cout << byzmsg->order  << " this is order "<< endl;
 		for(int i = 0; i < idcount; ++i){
 			cout << ntohl(byzmsg->ids[i])<< endl;
 		}
+	}
+	
+	void freeack(Ack* p){
+		free(p);
+	}
+
+	void freebyz(ByzantineMessage *pbyzmsg){
+		free(pbyzmsg);
 	}
 	void sendByzantineMessage(int type, void* p);
 	int recvByzantineMessage(void* &);

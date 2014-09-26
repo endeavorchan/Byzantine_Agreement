@@ -37,8 +37,7 @@ Messages::Messages(){
 
 	freeaddrinfo(servinfo);
 
-   	/* make message */
-	byzmsg = makeByzantineMessage(1, 0, 4);
+   	
 	//cout << "sec" <<endl;
 }
 
@@ -47,7 +46,8 @@ void Messages::mainLoop(){
   
     while (1) {
 	//cout << "Iterate" << endl;
-	struct timeval timeout={10,0}; 
+	struct timeval timeout={0,800}; 
+	FD_ZERO(&set);
 	FD_SET(sockfd, &set);
 
 	select(sockfd+1, &set, NULL, NULL, &timeout);
@@ -57,14 +57,16 @@ void Messages::mainLoop(){
 	    void *p = NULL;
 	    int type = recvByzantineMessage(p);
 	    	if(type = BYZANTINE){
-			ByzantineMessage* byzmsg = (ByzantineMessage*)p;
-		    	int nids = (ntohl(byzmsg->size) - sizeof(ByzantineMessage)) / sizeof(uint32_t);
+			ByzantineMessage* rc_byzmsg = (ByzantineMessage*)p;
+		    	int nids = (ntohl(rc_byzmsg->size) - sizeof(ByzantineMessage)) / sizeof(uint32_t);
   		    	cout << "receiveing in main loop\n" <<endl;  
 		    	printByzantineMessageids(nids);  
+			byzmsg = makeByzantineMessage(1, 0, 4);
+			sendByzantineMessage(BYZANTINE, (void*)byzmsg);
 		}
 		else if(type = ACK){
-			Ack* ackmsg = (Ack*)p;
-			int round = ntohl(ackmsg->round);
+			Ack* rc_ack = (Ack*)p;
+			int round = ntohl(rc_ack->round);
 			cout << "it's the ack from the " << round << "round" << endl;
 		}
 		else{
@@ -73,7 +75,8 @@ void Messages::mainLoop(){
 	    
 	}
 	cout << "1 " << byzmsg << endl;
-	sendByzantineMessage(BYZANTINE, (void*)byzmsg);
+	/* make message */
+	
     }
 }
 
@@ -103,6 +106,7 @@ void Messages::sendByzantineMessage(int type, void* p){
 			perror("talker: sendto");
 			exit(1);
 		}
+		freebyz(byzmsg);
 	}
 	else if(type == ACK){
 		Ack* ack = (Ack*)p;
@@ -115,11 +119,12 @@ void Messages::sendByzantineMessage(int type, void* p){
 			perror("talker: sendto");
 			exit(1);
 		}
+		freeack(ack);
 	}
 	else{
 		cout << "message content error\n";
 	}
-
+	
 	freeaddrinfo(servinfo);
 	printf("talker: sent %d bytes to %s\n", numbytes, "172.16.238.160");
 	//close(sockfd);
@@ -144,19 +149,19 @@ int Messages::recvByzantineMessage(void *&pmsg){
 	/* Collect message */
 	uint32_t *ptype = (uint32_t*)buf;
 	if(ntohl(*ptype) == BYZANTINE){
-		ByzantineMessage* byzmsg = (ByzantineMessage*)buf;
+		//ByzantineMessage* byzmsg = (ByzantineMessage*)buf;
 		//int nids = (ntohl(byzmsg->size) - sizeof(ByzantineMessage)) / sizeof(uint32_t);
   		//cout << "receiveing\n" <<endl;
 		//printByzantineMessageids(nids);
-		pmsg = (void*)byzmsg; //(ByzantineMessage*)pmsg = byzmsg;
+		pmsg = (void*)buf; //(ByzantineMessage*)pmsg = byzmsg;
 		return BYZANTINE;
 		
 	}
 	else if(ntohl(*ptype) == ACK){
-		Ack* ack = (Ack*)buf;
+		//Ack* ack = (Ack*)buf;
 		//uint32_t round = ntohl(ack->round);
 		//cout << "it's the ack from the " << round << "round" << endl;
-		pmsg = (void*)ack; //(Ack*)pmsg = ack;
+		pmsg = (void*)buf; //(Ack*)pmsg = ack;
 		return ACK;
 	}
 	else{
