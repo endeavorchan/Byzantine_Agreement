@@ -1,8 +1,7 @@
 #include "myMessage.h"
 #define MAXBUFLEN 2048
 #define MYPORT "4950"
-
-
+#define F 1
 Messages::Messages(){
 	struct addrinfo hints, *servinfo, *p;
 	int rv;
@@ -36,47 +35,82 @@ Messages::Messages(){
 	}
 
 	freeaddrinfo(servinfo);
-
+	this->round = 0;
+	this->f = 1;
+	// initialize iplist
+	string file_name = "ip_conf";
+	ifstream infile(file_name.c_str(),ios::in);
+	string textline;
+	int index = 0;
+	while(getline(infile,textline,'\n')){    
+		idlist[index++] = textline;
+	}  
+	infile.close();
+/*
+	IPList::iterator pos;
+	for(pos = idlist.begin(); pos != idlist.end(); ++pos){
+		cout << pos[0] << endl;
+	}
+*/
    	
-	//cout << "sec" <<endl;
 }
 
 void Messages::mainLoop(){
 	fd_set set;
   
-    while (1) {
+    while (f < F+1) {    /*need to continue to next round*/  f
 	//cout << "Iterate" << endl;
-	struct timeval timeout={0,800}; 
+	struct timeval timeout={5,0}; 
 	FD_ZERO(&set);
 	FD_SET(sockfd, &set);
 
 	select(sockfd+1, &set, NULL, NULL, &timeout);
 
-	if (FD_ISSET(sockfd, &set)) {
+	if (FD_ISSET(sockfd, &set)) {   
 	    cout << "receive message\n";
 	    void *p = NULL;
 	    int type = recvByzantineMessage(p);
-	    	if(type = BYZANTINE){
+	    /*insert the messages received in this round(discard messages not for this round), 
+				must be a way to sort the messages */
+		/*Send ACK*/
+	    if(type = BYZANTINE){
 			ByzantineMessage* rc_byzmsg = (ByzantineMessage*)p;
-		    	int nids = (ntohl(rc_byzmsg->size) - sizeof(ByzantineMessage)) / sizeof(uint32_t);
-  		    	cout << "receiveing in main loop\n" <<endl;  
-		    	printByzantineMessageids(nids);  
-			byzmsg = makeByzantineMessage(1, 0, 4);
-			sendByzantineMessage(BYZANTINE, (void*)byzmsg);
+			if(rc_byzmsg->round == f){
+				cout << "received a byzantine msg in main loop\n" <<endl;  
+				if(msglist.insert_bymsg(rc_byzmsg)){
+					makeAck(rc_byzmsg->round);
+					sendByzantineMessage(ACK, (void*)ack);
+					free(ack);
+				}
+  		   		
+  		   	}
+	
 		}
 		else if(type = ACK){
 			Ack* rc_ack = (Ack*)p;
-			int round = ntohl(rc_ack->round);
+			//int round = ntohl(rc_ack->round);
 			cout << "it's the ack from the " << round << "round" << endl;
+			if(rc_ack->size == sizeof(Ack)){
+				//set_bymsg(round);
+				/*tell send this one has be received*/
+			}
 		}
 		else{
 			cout << "receiving error"<< endl;
 		}
 	    
 	}
-	cout << "1 " << byzmsg << endl;
-	/* make message */
+	/*forword (to all others who should receive) messages in the last round received. if not contine*/
+	if(!msglist.checkmsgallsent(f - 1)){
+		ByztMsgNode * byztnode = get_bymsg(f-1);
+		makeByzantineMessage(byztnode->order, f, byztnode->nu_ids+1, nodeid);
+		sendByzantineMessage(BYZANTINE, (void*)byzmsg);
+		free(byzmsg);
+	}
 	
+	/*all messages in the last round had be succedly forwarded and
+		 all messages should be received in this round has received enter next round*/
+	// if so{ f++; }
     }
 }
 
@@ -149,8 +183,15 @@ int Messages::recvByzantineMessage(void *&pmsg){
 	/* Collect message */
 	uint32_t *ptype = (uint32_t*)buf;
 	if(ntohl(*ptype) == BYZANTINE){
-		//ByzantineMessage* byzmsg = (ByzantineMessage*)buf;
-		//int nids = (ntohl(byzmsg->size) - sizeof(ByzantineMessage)) / sizeof(uint32_t);
+		ByzantineMessage* byzmsg = (ByzantineMessage*)buf;
+		byzmsg->type = ntohl(byzmsg->type);
+		byzmsg->size = ntohl(byzmsg->size);
+		byzmsg->round = ntohl(byzmsg->round);
+		byzmsg->order = ntohl(byzmsg->order);
+		int idcounts = (ntohl(byzmsg->size) - sizeof(ByzantineMessage)) / sizeof(uint32_t);
+		for(int i = 0; i < idcounts; ++i){
+			byzmsg->ids[i] = ntohl(byzmsg->ids[i]);
+		}
   		//cout << "receiveing\n" <<endl;
 		//printByzantineMessageids(nids);
 		pmsg = (void*)buf; //(ByzantineMessage*)pmsg = byzmsg;
@@ -158,7 +199,10 @@ int Messages::recvByzantineMessage(void *&pmsg){
 		
 	}
 	else if(ntohl(*ptype) == ACK){
-		//Ack* ack = (Ack*)buf;
+		Ack* ack = (Ack*)buf;
+		ack->type = ntohl(ack->type);
+		ack->size = ntohl(ack->size);
+		ack->round = ntohl(ack->round);
 		//uint32_t round = ntohl(ack->round);
 		//cout << "it's the ack from the " << round << "round" << endl;
 		pmsg = (void*)buf; //(Ack*)pmsg = ack;

@@ -1,5 +1,6 @@
 #ifndef MYMESSAGE_H
 #define MYMESSAGE_H
+#endif
 #include "msglist.h"
 #include <iostream>
 #define PORT 10088
@@ -37,10 +38,17 @@ class Messages{
 private:
 	ByzantineMessage* byzmsg;
 	Ack* ack;
+	MsgList msglist;
 	int sockfd;
 	uint16_t my_port;
 	uint32_t my_ip;
 	uint32_t my_id;
+	uint32_t nodeid;
+	uint32_t round;
+	uint32_t f;
+	IPList iplist;
+
+
 	void *get_in_addr(struct sockaddr *sa)
 	{
 		if (sa->sa_family == AF_INET) {
@@ -61,30 +69,28 @@ private:
 
 public:
 	Messages();
-	Ack* makeAck(int round){
+	void makeAck(int round){
 		ack = (Ack*)malloc(sizeof(Ack));
 		ack->type = htonl(ACK);
 		ack->size = htonl(sizeof(Ack));
 		ack->round = htonl(round);
 	}
-	ByzantineMessage * makeByzantineMessage(int order, int round, int idcount){
+	void makeByzantineMessage(int order, int round, int idcount, int id){
 		byzmsg = allocatebyz(idcount);
 		byzmsg->type = htonl(BYZANTINE);
 		byzmsg->size = htonl(sizeof(ByzantineMessage) + sizeof(uint32_t) * idcount);
 		byzmsg->round = htonl(round);
 		byzmsg->order = htonl(order);
 		//	byzmsg->order = 2;
-		for(int i = 0; i < idcount; ++i){
-			byzmsg->ids[i] = htonl(2);
-		}
-		return byzmsg;
+		for(int i = 0; i < idcount-1; ++i);
+		byzmsg->ids[i] = htonl(id);  // may change
 	}
 	
 	
-	void printByzantineMessageids(int idcount){
+	void printByzantineMessageids(int idcount, ByzantineMessage *msg){
 		//	cout << byzmsg->order  << " this is order "<< endl;
 		for(int i = 0; i < idcount; ++i){
-			cout << ntohl(byzmsg->ids[i])<< endl;
+			cout << msg->ids[i]<< endl;
 		}
 	}
 	
@@ -121,4 +127,4 @@ class myMessage{
 */
 
 
-#endif
+

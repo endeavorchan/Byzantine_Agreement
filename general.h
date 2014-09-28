@@ -1,5 +1,6 @@
 #ifndef GENREAL_H
 #define GENREAL_H
+#endif
 #include "msglist.h"
 #include "myMessage.h"
 #include "fstream"
@@ -12,4 +13,4 @@ typedef vector<string> Servers;
 
 
 
-#endif
+
