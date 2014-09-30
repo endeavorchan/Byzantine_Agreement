@@ -37,6 +37,6 @@ int main(){
 	Messages msg;
 	//msg.makeByzantineMessage(4);
 	//msg.printByzantineMessageids(4);
-	msg.mainLoop();
+	//msg.mainLoop();
 	return 0;
 }

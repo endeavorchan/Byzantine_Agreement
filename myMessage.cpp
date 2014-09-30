@@ -1,4 +1,4 @@
-#include "myMessage.h"
+#include "general.h"
 #define MAXBUFLEN 2048
 #define MYPORT "4950"
 #define F 1
@@ -29,7 +29,6 @@ Messages::Messages(){
 
 		break;
 	}
-
 	if (p == NULL) {
 		fprintf(stderr, "listener: failed to bind socket\n");
 	}
@@ -38,27 +37,27 @@ Messages::Messages(){
 	this->round = 0;
 	this->f = 1;
 	// initialize iplist
-	string file_name = "ip_conf";
+	string file_name = "ip.conf";
 	ifstream infile(file_name.c_str(),ios::in);
 	string textline;
 	int index = 0;
 	while(getline(infile,textline,'\n')){    
-		idlist[index++] = textline;
+		iplist[index++] = textline;
 	}  
 	infile.close();
-/*
+
 	IPList::iterator pos;
-	for(pos = idlist.begin(); pos != idlist.end(); ++pos){
-		cout << pos[0] << endl;
+	for(pos = iplist.begin(); pos != iplist.end(); ++pos){
+		cout << pos->first << " " << pos->second << endl;
 	}
-*/
+	// get a list of all the other nodes and the corresponding address.
    	
 }
 
 void Messages::mainLoop(){
 	fd_set set;
   
-    while (f < F+1) {    /*need to continue to next round*/  f
+    while (f < F+1) {    /*need to continue to next round f*/  
 	//cout << "Iterate" << endl;
 	struct timeval timeout={5,0}; 
 	FD_ZERO(&set);
@@ -102,9 +101,10 @@ void Messages::mainLoop(){
 	}
 	/*forword (to all others who should receive) messages in the last round received. if not contine*/
 	if(!msglist.checkmsgallsent(f - 1)){
-		ByztMsgNode * byztnode = get_bymsg(f-1);
+		ByztMsgNode * byztnode = msglist.get_bymsg(f-1);
+		
 		makeByzantineMessage(byztnode->order, f, byztnode->nu_ids+1, nodeid);
-		sendByzantineMessage(BYZANTINE, (void*)byzmsg);
+		sendByzantineMessage(BYZANTINE, (void*)byzmsg);   
 		free(byzmsg);
 	}
 	
@@ -115,14 +115,14 @@ void Messages::mainLoop(){
 }
 
 
-void Messages::sendByzantineMessage(int type, void* p){
+void Messages::sendByzantineMessage(int type, void* p, int dest_id){
 
 	struct addrinfo hints, *servinfo;
 	int numbytes;
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_DGRAM;
-	getaddrinfo("172.16.238.160", "6441", &hints, &servinfo);
+	getaddrinfo("172.16.238.160", "6441", &hints, &servinfo); //shoud send to the dest_id
         char buf[MAXBUFLEN];
 	
 	if(type == BYZANTINE){
