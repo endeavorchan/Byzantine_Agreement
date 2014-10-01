@@ -42,6 +42,8 @@ struct ByztMsgNode{
 	uint32_t round; // round number
 	uint32_t order; // the order (retreat = 0 and attack = 1)
 	uint32_t nu_send; // sent id
+	int needsendcount;
+	int* needsendqueue;
 	uint32_t ids[]; // id's of the senders of the message
 };
 
@@ -56,9 +58,24 @@ struct ByztMsgNodeHead{
 
 class MsgList{
 	ByztMsgNodeHead* head;
+	int myid;
 public:
+
 	MsgList(){
 		head = NULL;
+	}
+	void fortest(){
+		ByzantineMessage *msg;
+		msg = (ByzantineMessage *)malloc(sizeof(ByzantineMessage) + sizeof(uint32_t) * 1);
+		msg->type = BYZANTINE;
+		msg->size = (sizeof(ByzantineMessage) + sizeof(uint32_t) * 1);
+		msg->round = 0;
+		msg->order = 6;
+		msg->ids[0] = 3;
+		insert_bymsg(msg);	
+	}
+	int getmyid(){
+		return 0;
 	}
 	bool equal(ByztMsgNode* a, ByztMsgNode* b){
 		if(a == NULL || b == NULL){
@@ -78,7 +95,7 @@ public:
 		}
 		return false;
 	}
-	bool insert_bymsg(ByzantineMessage *msg){
+	ByztMsgNode* insert_bymsg(ByzantineMessage *msg){
 		int msgnu = (msg->size - sizeof(ByzantineMessage)) / sizeof(uint32_t);
 		ByztMsgNode * bmn = (ByztMsgNode*) malloc(sizeof(ByztMsgNode) + sizeof(uint32_t) * msgnu);
 		bmn->tag = false;
@@ -90,6 +107,29 @@ public:
 		for(int i = 0; i < msgnu; ++i){  
 			bmn->ids[i] = bmn->ids[i];
 		}
+		bool allids[4];
+		for(int i = 0; i < 4; ++i){
+			allids[i] = false;
+		}
+		int my_id = getmyid();
+		for(int i = 0; i < msgnu; ++i){
+			allids[bmn->ids[i]] = true;
+		}
+		allids[my_id] = true;
+		int needsend = 0;
+		for(int i = 0; i < 4; ++i){
+			if(!allids[i]){
+				needsend ++;
+			}
+		}
+		bmn->needsendcount = needsend;
+		bmn->needsendqueue = new int[needsend];
+		int j = 0;
+		for(int i = 0; i < 4; ++i){
+			if(!allids[i]){
+				bmn->needsendqueue[j++] = i;
+			}
+		}
 		ByztMsgNodeHead * temp = head;
 		while(temp && temp->round < msg->round){
 			temp = temp->down;
@@ -100,7 +140,7 @@ public:
 			temp->down = NULL;
 			temp->byzmsgnode = bmn;
 			temp->count = 1;
-			return true;
+			return bmn;
 		}
 		if(temp->round == msg->round){
 			ByztMsgNode *tpnode = temp->byzmsgnode;
@@ -108,13 +148,13 @@ public:
 				if(tpnode->next == NULL){
 					tpnode->next = bmn;
 					temp->count++;
-					return true;
+					return bmn;
 				}
 				tpnode = tpnode->next;
 			}
 		}
 		free(bmn);
-		return false;
+		return NULL;
 	}
 	bool checkmsgallreceive(int round, int num){
 		ByztMsgNodeHead* temp = head;
@@ -188,7 +228,7 @@ private:
 	uint32_t f;
 	IPList iplist;
 
-
+	
 	void *get_in_addr(struct sockaddr *sa)
 	{
 		if (sa->sa_family == AF_INET) {
@@ -215,26 +255,33 @@ public:
 		ack->size = htonl(sizeof(Ack));
 		ack->round = htonl(round);
 	}
-	void makeByzantineMessage(int order, int round, int idcount, int id){
-		byzmsg = allocatebyz(idcount);
+	void makeByzantineMessage(ByztMsgNode *byznode, int round, int nodeid ){//int order, int round, int idcount, int id){
+		byzmsg = allocatebyz(byznode->nu_ids + 1);
 		byzmsg->type = htonl(BYZANTINE);
-		byzmsg->size = htonl(sizeof(ByzantineMessage) + sizeof(uint32_t) * idcount);
+		byzmsg->size = htonl(sizeof(ByzantineMessage) + sizeof(uint32_t) * (byznode->nu_ids + 1));
 		byzmsg->round = htonl(round);
-		byzmsg->order = htonl(order);
+		byzmsg->order = htonl(byznode->order);
 		//	byzmsg->order = 2;
 		int i = 0;
-		for(i = 0; i < idcount-1; ++i);
-		byzmsg->ids[i] = htonl(id);  // may change
+		for(i = 0; i < byznode->nu_ids; ++i){
+			byzmsg->ids[i] = htonl(byznode->ids[i]);  // 
+		}
+		byzmsg->ids[byznode->nu_ids] = htonl(nodeid);
 	}
 	
 	
 	void printByzantineMessageids(int idcount, ByzantineMessage *msg){
 		//	cout << byzmsg->order  << " this is order "<< endl;
+		cout << "bznt message in round: "<< msg->round << endl;
+		cout << "ids originally send the msg is: "; 
 		for(int i = 0; i < idcount; ++i){
-			cout << msg->ids[i]<< endl;
+			cout << msg->ids[i] << " ";
 		}
+		cout << endl;
 	}
-	
+	void printAck(Ack* ack){
+		cout << "ack the round: " << ack->round << endl;
+	}
 	void freeack(Ack* p){
 		free(p);
 	}
@@ -242,6 +289,7 @@ public:
 	void freebyz(ByzantineMessage *pbyzmsg){
 		free(pbyzmsg);
 	}
+	
 	void sendByzantineMessage(int type, void* p, int dest_id);
 	int recvByzantineMessage(void* &);
 	void mainLoop();
