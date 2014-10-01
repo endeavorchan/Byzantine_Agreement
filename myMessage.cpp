@@ -47,6 +47,7 @@ Messages::Messages(){
 	infile.close();
 	nodeid = 0;
 	msglist.fortest();
+	//printmsgtable();
 /*	
 	IPList::iterator pos;
 
@@ -65,8 +66,8 @@ void Messages::mainLoop(){
 	fd_set set;
   
     while (round <= F+1) {    /*need to continue to next round f*/  
-	//cout << "Iterate" << endl;
-	struct timeval timeout={5,0}; 
+	cout << "Iterate" << endl;
+	struct timeval timeout={1,0}; 
 	FD_ZERO(&set);
 	FD_SET(sockfd, &set);
 
@@ -87,7 +88,7 @@ void Messages::mainLoop(){
 				if(byznode != NULL){
 					makeAck(rc_byzmsg->round);
 					sendByzantineMessage(ACK, (void*)ack, byznode->ids[byznode->nu_ids-1]);
-					free(ack);
+					//free(ack);
 				}
   		   		
   		   	}
@@ -112,6 +113,7 @@ void Messages::mainLoop(){
 		}
 	    
 	}
+	//cout << "here it si" <<endl;
 	/*forword (to all others who should receive) messages in the last round received. if not contine*/
 	if(!msglist.checkmsgallsent(round - 1)){
 		ByztMsgNode * byztnode = msglist.get_bymsg(round-1);
@@ -119,7 +121,7 @@ void Messages::mainLoop(){
 		int dest_id = byztnode->needsendqueue[byztnode->nu_send];
 		makeByzantineMessage(byztnode,f,nodeid);     //(byztnode->order, f, byztnode->nu_ids+1, nodeid);
 		sendByzantineMessage(BYZANTINE, (void*)byzmsg, dest_id);   
-		free(byzmsg);
+		//free(byzmsg);
 	}
 	/*all messages in the last round had be succedly forwarded and
 		 all messages should be received in this round has received enter next round*/
@@ -178,7 +180,7 @@ void Messages::sendByzantineMessage(int type, void* p, int dest_id){
 	}
 	
 	freeaddrinfo(servinfo);
-	printf("talker: sent %d bytes to %s\n", numbytes, "172.16.238.160");
+	printf("talker: sent %d bytes to %s\n", numbytes, pos->second.c_str());
 	//close(sockfd);
 
 }

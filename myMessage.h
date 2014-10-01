@@ -71,8 +71,9 @@ public:
 		msg->size = (sizeof(ByzantineMessage) + sizeof(uint32_t) * 1);
 		msg->round = 0;
 		msg->order = 6;
-		msg->ids[0] = 3;
-		insert_bymsg(msg);	
+		msg->ids[0] = 9;
+		insert_bymsg(msg);
+		cout << "here" << endl;	
 	}
 	int getmyid(){
 		return 0;
@@ -105,10 +106,10 @@ public:
 		bmn->round = msg->round;
 		bmn->order = msg->order;
 		for(int i = 0; i < msgnu; ++i){  
-			bmn->ids[i] = bmn->ids[i];
+			bmn->ids[i] = msg->ids[i];
 		}
-		bool allids[4];
-		for(int i = 0; i < 4; ++i){
+		bool allids[3];
+		for(int i = 0; i < 3; ++i){
 			allids[i] = false;
 		}
 		int my_id = getmyid();
@@ -117,7 +118,7 @@ public:
 		}
 		allids[my_id] = true;
 		int needsend = 0;
-		for(int i = 0; i < 4; ++i){
+		for(int i = 0; i < 3; ++i){
 			if(!allids[i]){
 				needsend ++;
 			}
@@ -125,21 +126,37 @@ public:
 		bmn->needsendcount = needsend;
 		bmn->needsendqueue = new int[needsend];
 		int j = 0;
-		for(int i = 0; i < 4; ++i){
+		for(int i = 0; i < 3; ++i){
 			if(!allids[i]){
 				bmn->needsendqueue[j++] = i;
 			}
 		}
+		/*
+		for(int i = 0; i < bmn->needsendcount; ++i){
+			cout << bmn->needsendqueue[i] << endl;
+		}
+		*/
+		if(!head){
+			head = (ByztMsgNodeHead*) malloc(sizeof(ByztMsgNodeHead));
+			head->round = msg->round;
+			head->down = NULL;
+			head->byzmsgnode = bmn;
+			head->count = 1;
+			//cout << temp->count << endl;
+			return bmn;
+		}
 		ByztMsgNodeHead * temp = head;
-		while(temp && temp->round < msg->round){
+		while(temp->round < msg->round && temp->down != NULL){
 			temp = temp->down;
 		}
-		if(temp == NULL){
-			temp = (ByztMsgNodeHead*) malloc(sizeof(ByztMsgNodeHead));
+		if(temp->down == NULL){
+			temp->down = (ByztMsgNodeHead*) malloc(sizeof(ByztMsgNodeHead));
+			temp = temp->down;
 			temp->round = msg->round;
 			temp->down = NULL;
 			temp->byzmsgnode = bmn;
 			temp->count = 1;
+			//cout << temp->count << endl;
 			return bmn;
 		}
 		if(temp->round == msg->round){
@@ -158,9 +175,14 @@ public:
 	}
 	bool checkmsgallreceive(int round, int num){
 		ByztMsgNodeHead* temp = head;
-		while(temp->round != round){
+		//cout << round << "temp round " << temp->round << endl;
+		if(temp == NULL){
+			cout << "in checkmsgallreceive head is null" << endl;
+		}
+		while(temp && temp->round != round){
 			temp = temp->down;
 		}
+		if(temp == NULL) return false;
 		if(temp->round == round){
 			if(temp->count == num)
 				return true;
@@ -168,9 +190,13 @@ public:
 		return false;
 	}
 	bool checkmsgallsent(int round){
-		if(round <= 0)
+		if(round < 0)
 			return true;
 		ByztMsgNodeHead* temp = head;
+
+		if(head == NULL){
+			cout << "in checkmsgallsent head is NULL" << endl;
+		}
 		while(temp->round != round){
 			temp = temp->down;
 		}
@@ -210,7 +236,15 @@ public:
 		temp->tag = true;
 		return true;
 	}
-	
+	void printmsg(){
+		//ByztMsgNodeHead* head;
+		ByztMsgNodeHead* p = head;
+		if(p == NULL) cout<< "shab" << endl;
+		while(p){
+			cout << "in " << p->round << endl;
+			p = p->down;
+		}
+	}
 	
 };
 typedef map <int, string>  IPList;
@@ -293,7 +327,9 @@ public:
 	void sendByzantineMessage(int type, void* p, int dest_id);
 	int recvByzantineMessage(void* &);
 	void mainLoop();
-
+	void printmsgtable(){
+		msglist.printmsg();
+	}
 };
 
 
