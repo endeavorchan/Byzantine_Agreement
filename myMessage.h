@@ -131,11 +131,11 @@ public:
 				bmn->needsendqueue[j++] = i;
 			}
 		}
-		/*
+		cout << "sending queue is :";
 		for(int i = 0; i < bmn->needsendcount; ++i){
-			cout << bmn->needsendqueue[i] << endl;
+			cout << bmn->needsendqueue[i] << " " << endl;
 		}
-		*/
+		
 		if(!head){
 			head = (ByztMsgNodeHead*) malloc(sizeof(ByztMsgNodeHead));
 			head->round = msg->round;

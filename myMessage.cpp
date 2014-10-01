@@ -74,7 +74,7 @@ void Messages::mainLoop(){
 	select(sockfd+1, &set, NULL, NULL, &timeout);
 
 	if (FD_ISSET(sockfd, &set)) {   
-	    cout << "receive message\n";
+	    cout << "receive message" << endl;
 	    void *p = NULL;
 	    int type = recvByzantineMessage(p);
 	    /*insert the messages received in this round(discard messages not for this round), 
@@ -82,8 +82,9 @@ void Messages::mainLoop(){
 		/*Send ACK*/
 	    if(type = BYZANTINE){
 			ByzantineMessage* rc_byzmsg = (ByzantineMessage*)p;
-			if(rc_byzmsg->round == f){
-				cout << "received a byzantine msg in main loop\n" <<endl;  
+			cout << rc_byzmsg->round << "my round is " << round << endl;
+			if(rc_byzmsg->round == round){
+				//cout << "received a byzantine msg in main loop\n" <<endl;  
 				ByztMsgNode* byznode = msglist.insert_bymsg(rc_byzmsg);
 				if(byznode != NULL){
 					makeAck(rc_byzmsg->round);
@@ -165,10 +166,11 @@ void Messages::sendByzantineMessage(int type, void* p, int dest_id){
 	else if(type == ACK){
 		Ack* ack = (Ack*)p;
 		char *mp = (char*)p;
-		for(int i = 0; i < ack->size; ++i){
+		cout << "ack size "<< ntohl(ack->size) << endl;
+		for(int i = 0; i < ntohl(ack->size); ++i){
 			buf[i] = mp[i];
 		}
-		if ((numbytes = sendto(sockfd, buf, ack->size, 0, 
+		if ((numbytes = sendto(sockfd, buf, ntohl(ack->size), 0, 
 					servinfo->ai_addr, servinfo->ai_addrlen)) == -1) {
 			perror("talker: sendto");
 			exit(1);
@@ -199,7 +201,6 @@ int Messages::recvByzantineMessage(void *&pmsg){
 		perror("recvfrom");
 		return -1;
 	}
-
 	/* Collect message */
 	uint32_t *ptype = (uint32_t*)buf;
 	if(ntohl(*ptype) == BYZANTINE){
@@ -207,12 +208,15 @@ int Messages::recvByzantineMessage(void *&pmsg){
 		byzmsg->type = ntohl(byzmsg->type);
 		byzmsg->size = ntohl(byzmsg->size);
 		byzmsg->round = ntohl(byzmsg->round);
+		//cout << "round is " << byzmsg->round << endl;
 		byzmsg->order = ntohl(byzmsg->order);
-		int idcounts = (ntohl(byzmsg->size) - sizeof(ByzantineMessage)) / sizeof(uint32_t);
+		//cout << "order is " << byzmsg->order << endl;
+		int idcounts = (byzmsg->size - sizeof(ByzantineMessage)) / sizeof(uint32_t);
+		cout << "idcounts is " << idcounts << endl;
 		for(int i = 0; i < idcounts; ++i){
 			byzmsg->ids[i] = ntohl(byzmsg->ids[i]);
 		}
-  		//cout << "receiveing\n" <<endl;
+  		cout << "received byzantine msg from " << byzmsg->ids[idcounts-1] <<endl;
 		//printByzantineMessageids(nids);
 		pmsg = (void*)buf; //(ByzantineMessage*)pmsg = byzmsg;
 		return BYZANTINE;
