@@ -105,6 +105,7 @@ public:
 		bmn->nu_send = 0;
 		bmn->round = msg->round;
 		bmn->order = msg->order;
+		bmn->next = NULL;
 		for(int i = 0; i < msgnu; ++i){  
 			bmn->ids[i] = msg->ids[i];
 		}
@@ -146,10 +147,12 @@ public:
 			return bmn;
 		}
 		ByztMsgNodeHead * temp = head;
+		static int a = 0;
 		while(temp->round < msg->round && temp->down != NULL){
 			temp = temp->down;
 		}
 		if(temp->down == NULL){
+			cout << "this is " << ++a << "time"<< endl;
 			temp->down = (ByztMsgNodeHead*) malloc(sizeof(ByztMsgNodeHead));
 			temp = temp->down;
 			temp->round = msg->round;
@@ -160,6 +163,7 @@ public:
 			return bmn;
 		}
 		if(temp->round == msg->round){
+			cout << " ccccccccccccccccccccc" << endl;
 			ByztMsgNode *tpnode = temp->byzmsgnode;
 			while(!equal(tpnode, bmn)){
 				if(tpnode->next == NULL){
@@ -240,8 +244,18 @@ public:
 		//ByztMsgNodeHead* head;
 		ByztMsgNodeHead* p = head;
 		if(p == NULL) cout<< "shab" << endl;
+		ByztMsgNode * bznode = NULL;
 		while(p){
-			cout << "in " << p->round << endl;
+			cout << "in " << p->round << ": " << endl;
+			bznode = p->byzmsgnode;
+			while(bznode){
+				cout << "msg: ";
+				for(int i = 0; i < bznode->nu_ids; ++i){
+					cout << bznode->ids[i] << "**";
+				}
+				cout << "order: " << bznode->order << " round: " << bznode->round << endl;
+				bznode = bznode->next;
+			}
 			p = p->down;
 		}
 	}

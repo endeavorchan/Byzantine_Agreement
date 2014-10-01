@@ -84,8 +84,11 @@ void Messages::mainLoop(){
 			ByzantineMessage* rc_byzmsg = (ByzantineMessage*)p;
 			cout << rc_byzmsg->round << "my round is " << round << endl;
 			if(rc_byzmsg->round == round){
-				//cout << "received a byzantine msg in main loop\n" <<endl;  
+				cout << "received a byzantine msg in main loop\n" <<endl; 
+				cout << "table is: "<< endl;
+				printmsgtable(); 
 				ByztMsgNode* byznode = msglist.insert_bymsg(rc_byzmsg);
+				cout << "get here ? " <<endl;
 				if(byznode != NULL){
 					makeAck(rc_byzmsg->round);
 					sendByzantineMessage(ACK, (void*)ack, byznode->ids[byznode->nu_ids-1]);
