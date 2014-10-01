@@ -106,9 +106,12 @@ public:
 		bmn->round = msg->round;
 		bmn->order = msg->order;
 		bmn->next = NULL;
+		cout << "previously sent id are : ";
 		for(int i = 0; i < msgnu; ++i){  
 			bmn->ids[i] = msg->ids[i];
+			cout << bmn->ids[i] << " ";
 		}
+		cout << endl;
 		bool allids[3];
 		for(int i = 0; i < 3; ++i){
 			allids[i] = false;
@@ -127,12 +130,14 @@ public:
 		bmn->needsendcount = needsend;
 		bmn->needsendqueue = new int[needsend];
 		int j = 0;
+		cout << "sending queue is : ";
 		for(int i = 0; i < 3; ++i){
 			if(!allids[i]){
 				bmn->needsendqueue[j++] = i;
+				cout << i << " ";
 			}
 		}
-		cout << "sending queue is :";
+		cout << endl;
 		for(int i = 0; i < bmn->needsendcount; ++i){
 			cout << bmn->needsendqueue[i] << " " << endl;
 		}
@@ -151,17 +156,6 @@ public:
 		while(temp->round < msg->round && temp->down != NULL){
 			temp = temp->down;
 		}
-		if(temp->down == NULL){
-			cout << "this is " << ++a << "time"<< endl;
-			temp->down = (ByztMsgNodeHead*) malloc(sizeof(ByztMsgNodeHead));
-			temp = temp->down;
-			temp->round = msg->round;
-			temp->down = NULL;
-			temp->byzmsgnode = bmn;
-			temp->count = 1;
-			//cout << temp->count << endl;
-			return bmn;
-		}
 		if(temp->round == msg->round){
 			cout << " ccccccccccccccccccccc" << endl;
 			ByztMsgNode *tpnode = temp->byzmsgnode;
@@ -174,6 +168,18 @@ public:
 				tpnode = tpnode->next;
 			}
 		}
+		else if(temp->down == NULL){
+			cout << "this is " << ++a << "time"<< endl;
+			temp->down = (ByztMsgNodeHead*) malloc(sizeof(ByztMsgNodeHead));
+			temp = temp->down;
+			temp->round = msg->round;
+			temp->down = NULL;
+			temp->byzmsgnode = bmn;
+			temp->count = 1;
+			//cout << temp->count << endl;
+			return bmn;
+		}
+		
 		free(bmn);
 		return NULL;
 	}

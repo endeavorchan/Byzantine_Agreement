@@ -65,7 +65,7 @@ Messages::Messages(){
 void Messages::mainLoop(){
 	fd_set set;
   
-    while (round <= F+1) {    /*need to continue to next round f*/  
+    while (round <= 1) {    /*need to continue to next round f*/  
 	cout << "Iterate" << endl;
 	struct timeval timeout={1,0}; 
 	FD_ZERO(&set);
@@ -74,40 +74,45 @@ void Messages::mainLoop(){
 	select(sockfd+1, &set, NULL, NULL, &timeout);
 
 	if (FD_ISSET(sockfd, &set)) {   
-	    cout << "receive message" << endl;
+	   // cout << "receive message" << endl;
 	    void *p = NULL;
 	    int type = recvByzantineMessage(p);
 	    /*insert the messages received in this round(discard messages not for this round), 
 				must be a way to sort the messages */
 		/*Send ACK*/
-	    if(type = BYZANTINE){
+	    if(type == BYZANTINE){
 			ByzantineMessage* rc_byzmsg = (ByzantineMessage*)p;
 			cout << rc_byzmsg->round << "my round is " << round << endl;
 			if(rc_byzmsg->round == round){
-				cout << "received a byzantine msg in main loop\n" <<endl; 
+				int nu_ids = (rc_byzmsg->size - sizeof(ByzantineMessage)) / sizeof(uint32_t);
+				cout << "received a byzantine msg in main loop from " << rc_byzmsg->ids[nu_ids - 1] <<endl; 
+				//cout << "received a byzantine msg in main loop from " << byznode->ids[byznode->nu_ids-1] <<endl; 
+				
+				ByztMsgNode* byznode = msglist.insert_bymsg(rc_byzmsg);
 				cout << "table is: "<< endl;
 				printmsgtable(); 
-				ByztMsgNode* byznode = msglist.insert_bymsg(rc_byzmsg);
-				cout << "get here ? " <<endl;
 				if(byznode != NULL){
 					makeAck(rc_byzmsg->round);
+					cout << "preparing send ack" << endl;
+					//cout << "num of ids " << byznode->nu_ids << endl;
+					//cout << "receiving from node "<<  << endl;
 					sendByzantineMessage(ACK, (void*)ack, byznode->ids[byznode->nu_ids-1]);
+					cout << "ack sent" << endl;
 					//free(ack);
 				}
   		   		
   		   	}
 	
 		}
-		else if(type = ACK){
+		else if(type == ACK){
 			Ack* rc_ack = (Ack*)p;
 			//int round = ntohl(rc_ack->round);
-			cout << "it's the ack from the " << round << "round" << endl;
+			cout << "received a ack in main loop in " << round << " round" << endl;
 			if(rc_ack->size == sizeof(Ack)){
 				//set_bymsg(round);
 				/*tell send this one has be received*/
-				ByztMsgNode * byztnode = msglist.get_bymsg(f-1);
-				byztnode->nu_send++;
-				if(byztnode->nu_send == (byztnode->nu_ids - 1)){
+				ByztMsgNode * byztnode = msglist.get_bymsg(round-1);
+				if((byztnode->nu_send++) == (byztnode->needsendcount - 1)){
 					byztnode->tag = true;
 				}
 			}
@@ -123,17 +128,21 @@ void Messages::mainLoop(){
 		ByztMsgNode * byztnode = msglist.get_bymsg(round-1);
 		if(byztnode->nu_send >= byztnode->needsendcount) cout << "nu_send > needsendcount" << endl;
 		int dest_id = byztnode->needsendqueue[byztnode->nu_send];
-		makeByzantineMessage(byztnode,f,nodeid);     //(byztnode->order, f, byztnode->nu_ids+1, nodeid);
-		sendByzantineMessage(BYZANTINE, (void*)byzmsg, dest_id);   
+		makeByzantineMessage(byztnode,round,nodeid);     //(byztnode->order, f, byztnode->nu_ids+1, nodeid);
+		sendByzantineMessage(BYZANTINE, (void*)byzmsg, dest_id); 
+		cout << "byzmsg send to " << dest_id << endl;  
 		//free(byzmsg);
 	}
 	/*all messages in the last round had be succedly forwarded and
 		 all messages should be received in this round has received enter next round*/
 	// if so{ f++; }
-	if(msglist.checkmsgallreceive(round, 3-round/**/) && msglist.checkmsgallsent(round-1)){  //suppose its f+1
+	if(msglist.checkmsgallreceive(round, 2/**/) && msglist.checkmsgallsent(round-1)){  //suppose its f+1
 		round++;
 	}
     }
+	 cout << "final table is: "<< endl;
+	printmsgtable();
+	cout << "done in round " << round << endl;
 }
 
 
@@ -145,7 +154,7 @@ void Messages::sendByzantineMessage(int type, void* p, int dest_id){
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_DGRAM;
 	IPList::iterator pos = iplist.find(dest_id);
-	cout << "the ip of the dest is "<< pos->second << endl;
+	//cout << "the ip of the dest is "<< pos->second << endl;
 	getaddrinfo(pos->second.c_str(), "6441", &hints, &servinfo); //shoud send to the dest_id
         char buf[MAXBUFLEN];
 	
@@ -185,7 +194,7 @@ void Messages::sendByzantineMessage(int type, void* p, int dest_id){
 	}
 	
 	freeaddrinfo(servinfo);
-	printf("talker: sent %d bytes to %s\n", numbytes, pos->second.c_str());
+	//printf("talker: sent %d bytes to %s\n", numbytes, pos->second.c_str());
 	//close(sockfd);
 
 }
